@@ -123,6 +123,9 @@ class PureHttp {
         const $config = response.config;
         // 关闭进度条动画
         NProgress.done();
+        if (response.data.error_code) {
+          return Promise.reject(response.data.error_msg);
+        }
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof $config.beforeResponseCallback === "function") {
           $config.beforeResponseCallback(response);
