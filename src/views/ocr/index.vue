@@ -163,6 +163,12 @@ const doOcrDoc = options => {
         id="original-image"
         :src="base64UrlImage"
       />
+      <iframe
+        v-if="base64UrlDoc"
+        id="original-Doc"
+        :src="base64UrlDoc"
+        style="width: 700px; height: 500px"
+      />
     </div>
   </div>
 </template>
