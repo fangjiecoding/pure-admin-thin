@@ -122,6 +122,7 @@ const calculateFontSize = (
   return fontSize;
 };
 const base64UrlDoc = ref("");
+
 const doOcrDoc = options => {
   const { file } = options;
   return new Promise((resolve, reject) => {
