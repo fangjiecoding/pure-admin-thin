@@ -10,14 +10,7 @@ import pluginTypeScript from "@typescript-eslint/eslint-plugin";
 export default defineFlatConfig([
   {
     ...js.configs.recommended,
-    ignores: [
-      "**/.*",
-      "dist/*",
-      "*.d.ts",
-      "public/*",
-      "src/assets/**",
-      "src/**/iconfont/**"
-    ],
+
     languageOptions: {
       globals: {
         // index.d.ts
@@ -57,6 +50,7 @@ export default defineFlatConfig([
     rules: {
       ...configPrettier.rules,
       ...pluginPrettier.configs.recommended.rules,
+      "no-unused-vars": "off",
       "no-debugger": "off",
       "no-unused-vars": [
         "error",
@@ -177,5 +171,15 @@ export default defineFlatConfig([
         }
       ]
     }
+  },
+  {
+    ignores: [
+      "**/.*",
+      "dist/*",
+      "*.d.ts",
+      "public/*",
+      "src/assets/**",
+      "src/**/iconfont/**"
+    ]
   }
 ]);
