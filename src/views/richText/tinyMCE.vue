@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import tinymce from "tinymce";
-import { onMounted, onUnmounted } from "vue";
-import Editor from "@tinymce/tinymce-vue";
+import { onMounted, onUnmounted, ref } from "vue";
+import TemplateDialog from "./components/TemplateDialog.vue";
 const initObj = {
   selector: "#tinymce",
   menubar: true,
@@ -27,21 +27,37 @@ onMounted(() => {
 onUnmounted(() => {
   tinymce.remove();
 });
-// const getContent = () => {
-//   tinymce.activeEditor.execCommand("mceEmoticons");
-//   // console.log(tinymce.activeEditor.getContent());
-// };
-// const setContent = () => {
-//   tinymce.activeEditor.setContent("<p>123</p>");
-// };
+const getContent = () => {
+  data.value = tinymce.activeEditor.getContent();
+  console.log(data.value);
+};
+const setContent = () => {
+  tinymce.activeEditor.setContent("<p>123</p>");
+};
+const dialogVisible = ref(false);
+const selectTemp = () => {
+  dialogVisible.value = true;
+};
+const data = ref();
+const success = data => {
+  tinymce.activeEditor.setContent(data);
+};
 </script>
 <template>
   <div>
     <div id="tinymce" />
-    <!-- <Editor :init="initObj"></Editor> -->
-    <!-- <div style="margin-top: 20px">
+    <div
+      v-if="data"
+      style=" padding: 10px;margin-top: 20px; border: 1px solid #ccc"
+    >
+      <div>{{ data }}</div>
+    </div>
+    <div style="margin-top: 20px">
       <el-button type="primary" @click="getContent">获得内容</el-button>
       <el-button type="primary" @click="setContent">设置内容</el-button>
-    </div> -->
+      <el-button type="primary" @click="selectTemp">选择模板</el-button>
+    </div>
+
+    <TemplateDialog v-model="dialogVisible" @success="success" />
   </div>
 </template>
