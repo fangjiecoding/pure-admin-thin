@@ -1,7 +1,7 @@
 <template>
   <el-dialog v-model="dialogVisible" title="选择模板" width="50%">
-    <el-tabs tab-position="left" class="demo-tabs">
-      <el-tab-pane label="文字">
+    <el-tabs v-model="activeName" tab-position="left" class="demo-tabs">
+      <el-tab-pane name="text" label="文字">
         <div class="template-list">
           <div
             v-for="(item, index) in templateTextList"
@@ -13,14 +13,29 @@
           </div>
         </div>
       </el-tab-pane>
-      <el-tab-pane label="图表">
-        <el-tabs class="demo-tabs">
-          <el-tab-pane label="柱形图" />
-          <el-tab-pane label="饼图" />
-          <el-tab-pane label="折线图" />
+      <el-tab-pane name="chart" label="图表">
+        <el-tabs class="chart-tabs">
+          <el-tab-pane
+            v-for="(item, index) in templateChartInfo"
+            :key="index"
+            :label="item.title"
+          >
+            <div
+              v-for="(template, tIndex) in item.templates"
+              :key="tIndex"
+              class="template"
+              @click="insertChart(template)"
+            >
+              <div
+                :ref="el => (chartRefs[`${index}-${tIndex}`] = el)"
+                class="chart"
+                :style="{ width: '200px', height: '150px' }"
+              />
+            </div>
+          </el-tab-pane>
         </el-tabs>
       </el-tab-pane>
-      <el-tab-pane label="表格">
+      <el-tab-pane name="table" label="表格">
         <div class="template-list">
           <div
             v-for="(template, index) in templateTableList"
@@ -43,16 +58,17 @@
         </div>
       </el-tab-pane>
     </el-tabs>
-    <template v-slot:footer>
+    <template #footer>
       <span class="dialog-footer" />
     </template>
   </el-dialog>
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, nextTick, watch } from "vue";
 const dialogVisible = defineModel();
 const emits = defineEmits(["success"]);
+import { useECharts } from "@pureadmin/utils";
 
 export interface IProps {
   title: string;
@@ -115,6 +131,219 @@ const templateTextList = ref([
    <p style="font-size: 16px; line-height: 1.6; color: #34495e;">随着技术的进步和警务改革的深入，预计未来警情处理效率将进一步提升。</p>
    <p style="font-size: 16px; line-height: 1.6; color: #34495e;">同时，公众的安全感和满意度也将得到显著提高。</p>`
 ]);
+
+const templateChartInfo = ref([
+  {
+    title: "柱形图",
+    templates: [
+      {
+        config: {
+          title: { text: "基础柱状图" },
+          xAxis: {
+            type: "category",
+            data: ["衬衫", "羊毛衫", "雪纺衫", "裤子", "高跟鞋", "袜子"]
+          },
+          yAxis: { type: "value" },
+          series: [
+            {
+              data: [89, 92, 110, 134, 48, 118],
+              type: "bar",
+              itemStyle: { color: "#5470c6" }
+            }
+          ]
+        }
+      },
+      {
+        config: {
+          title: { text: "多系列柱状图" },
+          xAxis: {
+            type: "category",
+            data: ["Q1", "Q2", "Q3", "Q4"]
+          },
+          yAxis: { type: "value" },
+          series: [
+            {
+              name: "2022",
+              data: [320, 302, 341, 374],
+              type: "bar",
+              itemStyle: { color: "#91cc75" }
+            },
+            {
+              name: "2023",
+              data: [420, 382, 401, 434],
+              type: "bar",
+              itemStyle: { color: "#fac858" }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    title: "饼图",
+    templates: [
+      {
+        config: {
+          title: { text: "基础饼图" },
+          series: [
+            {
+              type: "pie",
+              radius: "50%",
+              data: [
+                { value: 1048, name: "搜索引擎" },
+                { value: 735, name: "直接访问" },
+                { value: 580, name: "邮件营销" },
+                { value: 484, name: "联盟广告" }
+              ],
+              emphasis: { itemStyle: { shadowBlur: 10 } }
+            }
+          ]
+        }
+      },
+      {
+        config: {
+          title: { text: "环形图" },
+          series: [
+            {
+              type: "pie",
+              radius: ["40%", "70%"],
+              data: [
+                { value: 335, name: "北京" },
+                { value: 310, name: "上海" },
+                { value: 234, name: "广州" },
+                { value: 135, name: "深圳" }
+              ],
+              label: { show: false }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    title: "折线图",
+    templates: [
+      {
+        config: {
+          title: { text: "基础折线图" },
+          xAxis: {
+            type: "category",
+            data: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+          },
+          yAxis: { type: "value" },
+          series: [
+            {
+              data: [820, 932, 901, 934, 1290, 1330, 1320],
+              type: "line",
+              smooth: true,
+              lineStyle: { color: "#ee6666" }
+            }
+          ]
+        }
+      },
+      {
+        config: {
+          title: { text: "多维度折线图" },
+          xAxis: { type: "category", data: ["1月", "2月", "3月", "4月"] },
+          yAxis: { type: "value" },
+          series: [
+            {
+              name: "用户增长",
+              data: [120, 200, 150, 80],
+              type: "line",
+              areaStyle: {}
+            },
+            {
+              name: "订单增长",
+              data: [82, 93, 90, 93],
+              type: "line",
+              areaStyle: {}
+            }
+          ]
+        }
+      }
+    ]
+  }
+  // {
+  //   title: "散点图",
+  //   templates: [
+  //     {
+  //       config: {
+  //         title: { text: "气泡图示例" },
+  //         xAxis: { type: "value" },
+  //         yAxis: { type: "value" },
+  //         series: [
+  //           {
+  //             type: "scatter",
+  //             symbolSize: 20,
+  //             data: [
+  //               [10.0, 8.04],
+  //               [8.07, 6.95],
+  //               [13.0, 7.58],
+  //               [9.05, 8.81],
+  //               [11.0, 8.33],
+  //               [14.0, 7.66]
+  //             ],
+  //             itemStyle: { color: "#73c0de" }
+  //           }
+  //         ]
+  //       }
+  //     }
+  //   ]
+  // },
+  // {
+  //   title: "雷达图",
+  //   templates: [
+  //     {
+  //       config: {
+  //         title: { text: "能力雷达图" },
+  //         radar: {
+  //           indicator: [
+  //             { name: "技术", max: 6500 },
+  //             { name: "沟通", max: 16000 },
+  //             { name: "管理", max: 30000 },
+  //             { name: "创新", max: 38000 }
+  //           ]
+  //         },
+  //         series: [
+  //           {
+  //             type: "radar",
+  //             data: [
+  //               {
+  //                 value: [4200, 3000, 20000, 35000],
+  //                 name: "员工能力评估"
+  //               }
+  //             ]
+  //           }
+  //         ]
+  //       }
+  //     }
+  //   ]
+  // }
+]);
+const chartRefs = ref<any>();
+
+const activeName = ref("text");
+watch(
+  () => activeName.value,
+  val => {
+    console.log(val);
+    if (val === "chart") {
+      nextTick(() => {
+        // Object.entries(chartRefs.value).forEach(([key, el]) => {
+        //   const [typeIndex, templateIndex] = key.split("-");
+        //   const elRef = ref(el);
+        //   const chart = useECharts(elRef.value);
+        //   chart.setOption(
+        //     templateChartInfo.value[typeIndex].templates[templateIndex].config
+        //   );
+        //   chart.resize();
+        // });
+      });
+    }
+  }
+);
+
 const templateTableList = ref([
   {
     rows: [
@@ -150,6 +379,21 @@ const templateTableList = ref([
 const insertText = item => {
   dialogVisible.value = false;
   emits("success", item);
+};
+
+const insertChart = template => {
+  const chartId = "echart-" + Date.now();
+  const chartHTML = `
+        <div>
+          <div id="${chartId}" style="width: 600px; height: 400px;"></div>
+          <script>
+            const chart = echarts.init(document.getElementById('${chartId}'));
+            chart.setOption(${JSON.stringify(template.config)});
+          <\/script>
+        </div>
+      `;
+  dialogVisible.value = false;
+  emits("success", chartHTML);
 };
 // 插入表格到 TinyMCE
 const insertTable = template => {
