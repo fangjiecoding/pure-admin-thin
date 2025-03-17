@@ -13,28 +13,6 @@
           </div>
         </div>
       </el-tab-pane>
-      <el-tab-pane name="chart" label="图表">
-        <el-tabs class="chart-tabs">
-          <el-tab-pane
-            v-for="(item, index) in templateChartInfo"
-            :key="index"
-            :label="item.title"
-          >
-            <div
-              v-for="(template, tIndex) in item.templates"
-              :key="tIndex"
-              class="template"
-              @click="insertChart(template)"
-            >
-              <div
-                :ref="el => (chartRefs[`${index}-${tIndex}`] = el)"
-                class="chart"
-                :style="{ width: '200px', height: '150px' }"
-              />
-            </div>
-          </el-tab-pane>
-        </el-tabs>
-      </el-tab-pane>
       <el-tab-pane name="table" label="表格">
         <div class="template-list">
           <div
@@ -57,6 +35,28 @@
           </div>
         </div>
       </el-tab-pane>
+      <el-tab-pane name="chart" label="图表">
+        <el-tabs class="chart-tabs">
+          <el-tab-pane
+            v-for="(item, index) in templateChartInfo"
+            :key="index"
+            :label="item.title"
+          >
+            <div class="chart-list">
+              <div
+                v-for="(template, tIndex) in item.templates"
+                :key="tIndex"
+                :ref="el => setChartRef(el, index, tIndex)"
+                class="chart-item"
+                :style="{ width: '200px', height: '150px' }"
+                @click="insertChart(template)"
+              >
+                <div />
+              </div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </el-tab-pane>
     </el-tabs>
     <template #footer>
       <span class="dialog-footer" />
@@ -68,6 +68,7 @@
 import { ref, nextTick, watch } from "vue";
 const dialogVisible = defineModel();
 const emits = defineEmits(["success"]);
+import * as echarts from "echarts";
 import { useECharts } from "@pureadmin/utils";
 
 export interface IProps {
@@ -321,24 +322,40 @@ const templateChartInfo = ref([
   //   ]
   // }
 ]);
-const chartRefs = ref<any>();
+
+const chartRefs = ref(new Map());
+const setChartRef = (el, typeIndex, templateIndex) => {
+  if (el) {
+    chartRefs.value.set(`${typeIndex}-${templateIndex}`, el);
+  }
+};
 
 const activeName = ref("text");
 watch(
   () => activeName.value,
   val => {
-    console.log(val);
+    console.log(chartRefs.value);
+
     if (val === "chart") {
       nextTick(() => {
-        // Object.entries(chartRefs.value).forEach(([key, el]) => {
-        //   const [typeIndex, templateIndex] = key.split("-");
-        //   const elRef = ref(el);
-        //   const chart = useECharts(elRef.value);
-        //   chart.setOption(
-        //     templateChartInfo.value[typeIndex].templates[templateIndex].config
-        //   );
-        //   chart.resize();
-        // });
+        // 遍历 Map 结构
+        console.log(chartRefs.value);
+
+        chartRefs.value.forEach((el, key) => {
+          const [typeIndex, templateIndex] = key.split("-").map(Number);
+
+          // 添加数据校验
+          const chartType = templateChartInfo.value[typeIndex];
+          if (!chartType) return;
+
+          const template = chartType.templates?.[templateIndex];
+          if (!template?.config) return;
+
+          // 初始化图表
+          const chart = echarts.init(el);
+          chart.setOption(template.config);
+          chart.resize();
+        });
       });
     }
   }
@@ -387,12 +404,14 @@ const insertChart = template => {
         <div>
           <div id="${chartId}" style="width: 600px; height: 400px;"></div>
           <script>
+            console.log(1)
             const chart = echarts.init(document.getElementById('${chartId}'));
             chart.setOption(${JSON.stringify(template.config)});
           <\/script>
         </div>
       `;
   dialogVisible.value = false;
+
   emits("success", chartHTML);
 };
 // 插入表格到 TinyMCE
@@ -431,5 +450,11 @@ const insertTable = template => {
   .template-item {
     cursor: pointer;
   }
+}
+
+.chart-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 </style>

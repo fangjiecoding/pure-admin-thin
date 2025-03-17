@@ -18,7 +18,21 @@ const initObj = {
   ],
   statusbar: false,
   skin: "oxide-dark",
-  language: "zh_CN"
+  language: "zh_CN",
+  allow_script_urls: true,
+  allow_html_data_urls: true,
+  content_security_policy: true,
+  extended_valid_elements: "script[src|charset|defer|type|async]",
+  init_instance_callback: editor => {
+    // 在 iframe 的 head 中插入 ECharts
+    const iframeDoc = editor.iframeElement.contentDocument;
+    const script = iframeDoc.createElement("script");
+    script.src = "https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js";
+    script.onload = val => {
+      console.log("ECharts 加载完成，可以在 iframe 中使用 echarts 对象");
+    };
+    iframeDoc.head.appendChild(script);
+  }
 };
 
 onMounted(() => {
@@ -48,7 +62,7 @@ const success = data => {
     <div id="tinymce" />
     <div
       v-if="data"
-      style=" padding: 10px;margin-top: 20px; border: 1px solid #ccc"
+      style="padding: 10px; margin-top: 20px; border: 1px solid #ccc"
     >
       <div>{{ data }}</div>
     </div>
