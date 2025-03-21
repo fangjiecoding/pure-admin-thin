@@ -66,9 +66,10 @@
 
 <script lang="ts" setup>
 import { ref, nextTick, watch } from "vue";
+import * as echarts from "echarts";
+
 const dialogVisible = defineModel();
 const emits = defineEmits(["success"]);
-import * as echarts from "echarts";
 import { useECharts } from "@pureadmin/utils";
 
 export interface IProps {
@@ -334,13 +335,9 @@ const activeName = ref("text");
 watch(
   () => activeName.value,
   val => {
-    console.log(chartRefs.value);
-
     if (val === "chart") {
       nextTick(() => {
         // 遍历 Map 结构
-        console.log(chartRefs.value);
-
         chartRefs.value.forEach((el, key) => {
           const [typeIndex, templateIndex] = key.split("-").map(Number);
 
@@ -392,27 +389,10 @@ const templateTableList = ref([
     cellStyle: "border: 1px solid #000; padding: 8px;" // 单元格样式
   }
 ]);
-
+// 插入文本到 TinyMCE
 const insertText = item => {
   dialogVisible.value = false;
-  emits("success", item);
-};
-
-const insertChart = template => {
-  const chartId = "echart-" + Date.now();
-  const chartHTML = `
-        <div>
-          <div id="${chartId}" style="width: 600px; height: 400px;"></div>
-          <script>
-            console.log(1)
-            const chart = echarts.init(document.getElementById('${chartId}'));
-            chart.setOption(${JSON.stringify(template.config)});
-          <\/script>
-        </div>
-      `;
-  dialogVisible.value = false;
-
-  emits("success", chartHTML);
+  emits("success", { type: "text", content: item });
 };
 // 插入表格到 TinyMCE
 const insertTable = template => {
@@ -437,7 +417,16 @@ const insertTable = template => {
         </table>
       `;
   dialogVisible.value = false;
-  emits("success", tableHTML);
+  emits("success", { type: "text", content: tableHTML });
+};
+// 插入图表到编辑器
+const insertChart = template => {
+  const id = `echarts-${Date.now()}`;
+  const chartHTML = `
+            <div id="${id}" style="width: 600px; height: 400px;" data-placeholder='${JSON.stringify(template.config)}'></div>
+        `;
+  emits("success", { type: "chart", id, content: chartHTML });
+  dialogVisible.value = false;
 };
 </script>
 

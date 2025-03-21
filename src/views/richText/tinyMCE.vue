@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import tinymce from "tinymce";
 import { onMounted, onUnmounted, ref } from "vue";
+import tinymce from "tinymce";
+import * as echarts from "echarts";
 import TemplateDialog from "./components/TemplateDialog.vue";
 const initObj = {
   selector: "#tinymce",
@@ -19,20 +20,7 @@ const initObj = {
   statusbar: false,
   skin: "oxide-dark",
   language: "zh_CN",
-  allow_script_urls: true,
-  allow_html_data_urls: true,
-  content_security_policy: true,
-  extended_valid_elements: "script[src|charset|defer|type|async]",
-  init_instance_callback: editor => {
-    // 在 iframe 的 head 中插入 ECharts
-    const iframeDoc = editor.iframeElement.contentDocument;
-    const script = iframeDoc.createElement("script");
-    script.src = "https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js";
-    script.onload = val => {
-      console.log("ECharts 加载完成，可以在 iframe 中使用 echarts 对象");
-    };
-    iframeDoc.head.appendChild(script);
-  }
+  base_url: "/tinymce"
 };
 
 onMounted(() => {
@@ -54,9 +42,27 @@ const selectTemp = () => {
 };
 const data = ref();
 const success = data => {
-  tinymce.activeEditor.setContent(data);
+  if (data.type === "chart") {
+    tinymce.activeEditor.insertContent(data);
+    renderChartsInEditor(data);
+  } else {
+    tinymce.activeEditor.insertContent(data);
+  }
+};
+
+// 渲染编辑器中的图表
+const renderChartsInEditor = data => {
+  const editor = tinymce.activeEditor;
+  const iframeDoc = editor.contentDocument;
+  const placeholderDom = iframeDoc.querySelector(`#${data.id}`);
+  console.log(placeholderDom.getAttribute("data-placeholder"));
+
+  const option = JSON.parse(placeholderDom.getAttribute("data-placeholder"));
+  const chart = echarts.init(placeholderDom);
+  chart.setOption(option);
 };
 </script>
+
 <template>
   <div>
     <div id="tinymce" />

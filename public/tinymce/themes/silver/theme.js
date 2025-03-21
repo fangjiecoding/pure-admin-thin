@@ -15439,15 +15439,13 @@
       providersBackstage,
       renderIcons
     );
-    const optTooltipping = spec.text
-      .filter(constant$1(!useText))
-      .map(t =>
-        Tooltipping.config(
-          providersBackstage.tooltips.getConfig({
-            tooltipText: providersBackstage.translate(t)
-          })
-        )
-      );
+    const optTooltipping = spec.text.filter(constant$1(!useText)).map(t =>
+      Tooltipping.config(
+        providersBackstage.tooltips.getConfig({
+          tooltipText: providersBackstage.translate(t)
+        })
+      )
+    );
     return deepMerge(
       renderCommonItem(
         {
@@ -37185,11 +37183,9 @@
         }),
         config("dialog-body-panel", [
           run$1(focusin(), (comp, se) => {
-            comp
-              .getSystem()
-              .broadcastOn([dialogFocusShiftedChannel], {
-                newFocus: Optional.some(se.event.target)
-              });
+            comp.getSystem().broadcastOn([dialogFocusShiftedChannel], {
+              newFocus: Optional.some(se.event.target)
+            });
           })
         ])
       ])
@@ -37938,11 +37934,9 @@
               Blocking.isBlocked(comp) ? noop() : Keying.focusIn(comp);
             }),
             run$1(focusShifted(), (comp, se) => {
-              comp
-                .getSystem()
-                .broadcastOn([dialogFocusShiftedChannel], {
-                  newFocus: se.event.newFocus
-                });
+              comp.getSystem().broadcastOn([dialogFocusShiftedChannel], {
+                newFocus: se.event.newFocus
+              });
             })
           ])
         ),
@@ -38698,11 +38692,9 @@
               Keying.focusIn(comp);
             }),
             run$1(focusShifted(), (comp, se) => {
-              comp
-                .getSystem()
-                .broadcastOn([dialogFocusShiftedChannel], {
-                  newFocus: se.event.newFocus
-                });
+              comp.getSystem().broadcastOn([dialogFocusShiftedChannel], {
+                newFocus: se.event.newFocus
+              });
             })
           ])
         ),
