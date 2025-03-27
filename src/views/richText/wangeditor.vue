@@ -5,7 +5,7 @@
       <button @click="printHtml">print html</button>
       <button @click="disable">disable</button>
     </div>
-    <div style=" margin-top: 10px;border: 1px solid #ccc">
+    <div style="margin-top: 10px; border: 1px solid #ccc">
       <Toolbar
         :editor="editorRef"
         :defaultConfig="toolbarConfig"
