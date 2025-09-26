@@ -1,7 +1,9 @@
 import { http } from "@/utils/http";
 
-const AK = "";
-const SK = "";
+// 百度API Key
+const AK = "xxxxx";
+// 百度APISecret Key
+const SK = "xxxxx";
 export const getAccessToken = () => {
   return http.request(
     "post",
