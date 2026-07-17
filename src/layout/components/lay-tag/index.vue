@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { emitter } from "@/utils/mitt";
+import NProgress from "@/utils/progress";
 import { RouteConfigs } from "../../types";
 import { useTags } from "../../hooks/useTag";
 import { routerArrays } from "@/layout/types";
@@ -17,11 +18,11 @@ import {
   useResizeObserver
 } from "@pureadmin/utils";
 
-import ExitFullscreen from "@iconify-icons/ri/fullscreen-exit-fill";
-import Fullscreen from "@iconify-icons/ri/fullscreen-fill";
-import ArrowDown from "@iconify-icons/ri/arrow-down-s-line";
-import ArrowRightSLine from "@iconify-icons/ri/arrow-right-s-line";
-import ArrowLeftSLine from "@iconify-icons/ri/arrow-left-s-line";
+import ExitFullscreen from "~icons/ri/fullscreen-exit-fill";
+import Fullscreen from "~icons/ri/fullscreen-fill";
+import ArrowDown from "~icons/ri/arrow-down-s-line";
+import ArrowRightSLine from "~icons/ri/arrow-right-s-line";
+import ArrowLeftSLine from "~icons/ri/arrow-left-s-line";
 
 const {
   Close,
@@ -204,12 +205,14 @@ function dynamicRouteTag(value: string): void {
 
 /** 刷新路由 */
 function onFresh() {
+  NProgress.start();
   const { fullPath, query } = unref(route);
   router.replace({
     path: "/redirect" + fullPath,
     query
   });
   handleAliveRoute(route as ToRouteType, "refresh");
+  NProgress.done();
 }
 
 function deleteDynamicTag(obj: any, current: any, tag?: string) {
@@ -252,7 +255,7 @@ function deleteDynamicTag(obj: any, current: any, tag?: string) {
   if (tag === "other") {
     spliceRoute(1, 1, true);
   } else if (tag === "left") {
-    spliceRoute(fixedTags.length, valueIndex - 1, true);
+    spliceRoute(fixedTags.length, valueIndex - fixedTags.length);
   } else if (tag === "right") {
     spliceRoute(valueIndex + 1, multiTags.value.length);
   } else {
@@ -351,7 +354,7 @@ function onClickDrop(key, item, selectRoute?: RouteConfigs) {
       break;
   }
   setTimeout(() => {
-    showMenuModel(route.fullPath, route.query);
+    showMenuModel(route.fullPath, route.query, route.params);
   });
 }
 
@@ -386,15 +389,18 @@ function disabledMenus(value: boolean, fixedTag = false) {
 function showMenuModel(
   currentPath: string,
   query: object = {},
+  params: object = {},
   refresh = false
 ) {
   const allRoute = multiTags.value;
   const routeLength = multiTags.value.length;
   let currentIndex = -1;
-  if (isAllEmpty(query)) {
-    currentIndex = allRoute.findIndex(v => v.path === currentPath);
-  } else {
+  if (!isAllEmpty(params)) {
+    currentIndex = allRoute.findIndex(v => isEqual(v.params, params));
+  } else if (!isAllEmpty(query)) {
     currentIndex = allRoute.findIndex(v => isEqual(v.query, query));
+  } else {
+    currentIndex = allRoute.findIndex(v => v.path === currentPath);
   }
   function fixedTagDisabled() {
     if (allRoute[currentIndex]?.meta?.fixedTag) {
@@ -460,14 +466,14 @@ function openMenu(tag, e) {
   } else if (route.path !== tag.path && route.name !== tag.name) {
     // 右键菜单不匹配当前路由，隐藏刷新
     tagsViews[0].show = false;
-    showMenuModel(tag.path, tag.query);
+    showMenuModel(tag.path, tag.query, tag.params);
   } else if (multiTags.value.length === 2 && route.path !== tag.path) {
     showMenus(true);
     // 只有两个标签时不显示关闭其他标签页
     tagsViews[4].show = false;
-  } else if (route.path === tag.path) {
-    // 右键当前激活的菜单
-    showMenuModel(tag.path, tag.query, true);
+    showMenuModel(tag.path, tag.query, tag.params);
+  } else {
+    showMenuModel(tag.path, tag.query, tag.params, true);
   }
 
   currentSelect.value = tag;
@@ -509,6 +515,7 @@ function tagOnClick(item) {
   } else {
     router.push({ path });
   }
+  emitter.emit("tagOnClick", item);
 }
 
 onClickOutside(contextmenuRef, closeMenu, {
@@ -586,7 +593,7 @@ onBeforeUnmount(() => {
         >
           <template v-if="showModel !== 'chrome'">
             <span
-              class="tag-title dark:!text-text_color_primary dark:hover:!text-primary"
+              class="tag-title dark:text-text_color_primary! dark:hover:text-primary!"
             >
               {{ item.meta.title }}
             </span>
