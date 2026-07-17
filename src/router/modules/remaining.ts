@@ -44,5 +44,13 @@ export default [
         component: () => import("@/layout/redirect.vue")
       }
     ]
+  },
+  {
+    path: "/demoTest/iframe-content",
+    name: "iframe-content",
+    component: () => import("@/views/demoTest/iframe_conent.vue"),
+    meta: {
+      title: "iframe-content"
+    }
   }
 ] satisfies Array<RouteConfigsTable>;
